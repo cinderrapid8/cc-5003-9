@@ -1,0 +1,92 @@
+{
+  "format_version": 1,
+  "source_path": "/workspace/demo/output/scenario_hum_damaged.wav",
+  "source_sha256": "36ddde05c5db15574f54dfe0472949d60b1321e689dfb30be32665360f81c4a7",
+  "original_dtype": "PCM_16",
+  "sample_rate": 16000,
+  "n_samples": 96000,
+  "next_op_id": 4,
+  "click_candidates": [],
+  "hum_candidates": [
+    {
+      "cand_id": "hum-0001",
+      "kind": "hum",
+      "frequency": 50.0,
+      "bandwidth": 2.0,
+      "peak_amplitude": 0.080053,
+      "snr_db": 63.9,
+      "decision": "accepted"
+    },
+    {
+      "cand_id": "hum-0002",
+      "kind": "hum",
+      "frequency": 100.0,
+      "bandwidth": 2.0,
+      "peak_amplitude": 0.039978,
+      "snr_db": 42.62,
+      "decision": "accepted"
+    },
+    {
+      "cand_id": "hum-0003",
+      "kind": "hum",
+      "frequency": 120.0,
+      "bandwidth": 2.0,
+      "peak_amplitude": 0.230328,
+      "snr_db": 30.27,
+      "decision": "excluded"
+    },
+    {
+      "cand_id": "hum-0004",
+      "kind": "hum",
+      "frequency": 150.0,
+      "bandwidth": 2.0,
+      "peak_amplitude": 0.019973,
+      "snr_db": 41.49,
+      "decision": "accepted"
+    }
+  ],
+  "operations": [
+    {
+      "op_id": "op-0001",
+      "op": "hum_notch",
+      "cand_id": "hum-0001",
+      "algorithm": "iirnotch_filtfilt",
+      "start": 0,
+      "end": 96000,
+      "max_gap_ms": null,
+      "params": {
+        "frequency_hz": 50.0,
+        "bandwidth_hz": 2.0,
+        "quality_scale": 1.0
+      }
+    },
+    {
+      "op_id": "op-0002",
+      "op": "hum_notch",
+      "cand_id": "hum-0002",
+      "algorithm": "iirnotch_filtfilt",
+      "start": 0,
+      "end": 96000,
+      "max_gap_ms": null,
+      "params": {
+        "frequency_hz": 100.0,
+        "bandwidth_hz": 2.0,
+        "quality_scale": 1.0
+      }
+    },
+    {
+      "op_id": "op-0003",
+      "op": "hum_notch",
+      "cand_id": "hum-0004",
+      "algorithm": "iirnotch_filtfilt",
+      "start": 0,
+      "end": 96000,
+      "max_gap_ms": null,
+      "params": {
+        "frequency_hz": 150.0,
+        "bandwidth_hz": 2.0,
+        "quality_scale": 1.0
+      }
+    }
+  ]
+}

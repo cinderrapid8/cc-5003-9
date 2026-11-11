@@ -1,0 +1,35 @@
+{
+  "format_version": 1,
+  "source_path": "/workspace/demo/output/scenario_long_damaged.wav",
+  "source_sha256": "edc76f63220685980c1699919a02cc054b058a25572b865ee2bd11689437d1fb",
+  "original_dtype": "PCM_16",
+  "sample_rate": 16000,
+  "n_samples": 96000,
+  "next_op_id": 1,
+  "click_candidates": [
+    {
+      "cand_id": "click-0001",
+      "kind": "click",
+      "start": 47508,
+      "end": 48492,
+      "width": 984,
+      "peak_sample": 48019,
+      "peak_amplitude": -0.9000244140625,
+      "score": 48.068,
+      "detector": "ar_residual",
+      "detector_params": {
+        "method": "ar",
+        "threshold_sigma": 8.0,
+        "ar_order": 16,
+        "merge_gap_ms": 1.0,
+        "max_gap_ms": 10.0,
+        "window_pad_ms": 0.75
+      },
+      "repairable": false,
+      "reject_reason": "long damage: not reliably repairable",
+      "decision": "excluded"
+    }
+  ],
+  "hum_candidates": [],
+  "operations": []
+}

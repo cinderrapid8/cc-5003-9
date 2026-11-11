@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>口述历史录音修复台</title>
+<style>
+  :root {
+    --bg: #14181f; --panel: #1d232d; --panel2: #242c38;
+    --line: #33404f; --text: #e6ebf2; --muted: #8fa0b3;
+    --accent: #4f9cf9; --good: #34c98e; --warn: #f0a94b; --bad: #ef6a6a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 14px/1.5 -apple-system, "Segoe UI", "PingFang SC",
+      "Microsoft YaHei", sans-serif;
+  }
+  header {
+    padding: 14px 22px; background: var(--panel);
+    border-bottom: 1px solid var(--line); display: flex;
+    align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  header h1 { font-size: 17px; margin: 0; font-weight: 600; }
+  .pill {
+    font-size: 12px; color: var(--muted); background: var(--panel2);
+    border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px;
+  }
+  main { padding: 20px 22px; max-width: 1280px; margin: 0 auto; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; padding: 16px; margin-bottom: 16px;
+  }
+  .card h2 {
+    font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); margin: 0 0 12px;
+  }
+  canvas { width: 100%; background: var(--bg); border-radius: 6px;
+    border: 1px solid var(--line); display: block; }
+  button, select, input {
+    font: inherit; color: var(--text); background: var(--panel2);
+    border: 1px solid var(--line); border-radius: 6px; padding: 7px 12px;
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); border-color: var(--accent);
+    color: #08111f; font-weight: 600; }
+  button.good { color: var(--good); }
+  button.bad { color: var(--bad); }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .spacer { flex: 1; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 500; font-size: 12px; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .tag { padding: 2px 8px; border-radius: 999px; font-size: 12px; }
+  .tag.pending { background: #3a3522; color: var(--warn); }
+  .tag.accepted { background: #16382c; color: var(--good); }
+  .tag.excluded { background: #3a2121; color: var(--bad); }
+  .tag.no { background: #3a2121; color: var(--bad); }
+  .tag.yes { background: #16382c; color: var(--good); }
+  audio { width: 100%; margin-top: 8px; }
+  .muted { color: var(--muted); font-size: 12px; }
+  .ab { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .ab .card { margin-bottom: 0; }
+  label { font-size: 12px; color: var(--muted); }
+  .banner { padding: 10px 14px; border-radius: 8px; margin-bottom: 14px;
+    font-size: 13px; display: none; }
+  .banner.show { display: block; }
+  .banner.info { background: #16283c; border: 1px solid #27496b; }
+  .banner.warn { background: #3a2c16; border: 1px solid #6b5227; }
+  code { color: var(--accent); }
+  .overlap { color: var(--warn); font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>口述历史录音修复台</h1>
+  <span class="pill" id="src-pill">未加载项目</span>
+  <span class="spacer"></span>
+  <button id="btn-demo">载入合成演示（爆音+工频）</button>
+  <input id="project-dir" placeholder="项目目录（也可输入后打开）" style="min-width:240px" />
+  <button id="btn-open">打开项目</button>
+</header>
+
+<main>
+  <div id="banner" class="banner"></div>
+
+  <div class="card">
+    <h2>检测设置</h2>
+    <div class="row">
+      <label>爆音算法
+        <select id="click-method">
+          <option value="ar">AR 线性预测残差（适合语音）</option>
+          <option value="median">中值残差（周期信号易误报）</option>
+        </select>
+      </label>
+      <label>阈值 σ <input id="click-thr" type="number" value="8"
+        step="0.5" style="width:80px" /></label>
+      <label>最大可修复窗口 ms <input id="max-gap" type="number"
+        value="10" step="1" style="width:80px" /></label>
+      <button class="primary" id="btn-detect-click">检测爆音候选</button>
+      <span class="spacer"></span>
+      <label>工频频率
+        <select id="line-freq" multiple size="1" style="height:34px">
+          <option value="50" selected>50 Hz</option>
+          <option value="60" selected>60 Hz</option>
+        </select>
+      </label>
+      <label>陷波带宽 Hz <input id="hum-bw" type="number" value="2"
+        step="0.5" style="width:70px" /></label>
+      <button class="primary" id="btn-detect-hum">检测工频候选</button>
+    </div>
+    <p class="muted" style="margin-bottom:0">
+      检测只产出<b>候选</b>，不会自动删除任何样本。短促辅音、真实敲击同样可能产生尖峰，
+      需由专家逐条接受或排除。长缺损会被标记为无法可靠修复。
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>波形与候选定位</h2>
+    <canvas id="wave" height="220"></canvas>
+    <p class="muted">蓝框＝待处理候选，绿框＝已接受，红框＝已排除，灰框＝不可修复。</p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>爆音候选（<span id="click-count">0</span>）</h2>
+      <table>
+        <thead><tr>
+          <th>ID</th><th class="num">位置 ms</th><th class="num">窗宽 ms</th>
+          <th class="num">分数 σ</th><th>可修复</th><th>状态</th><th>操作</th>
+        </tr></thead>
+        <tbody id="click-rows"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h2>工频候选（<span id="hum-count">0</span>）</h2>
+      <table>
+        <thead><tr>
+          <th>ID</th><th class="num">频率 Hz</th><th class="num">带宽 Hz</th>
+          <th class="num">SNR dB</th><th>状态</th><th>操作</th>
+        </tr></thead>
+        <tbody id="hum-rows"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>修复图（应用顺序）</h2>
+    <div id="overlap-note" class="overlap"></div>
+    <table>
+      <thead><tr>
+        <th>#</th><th>操作 ID</th><th>类型</th><th>算法</th>
+        <th class="num">窗口 ms</th><th>参数</th><th>顺序</th>
+      </tr></thead>
+      <tbody id="op-rows"></tbody>
+    </table>
+    <div class="row" style="margin-top:10px">
+      <button id="btn-undo">撤销最后一步（回退候选状态）</button>
+      <span class="muted">重叠区间严格按上表顺序作用；可手动上移/下移。</span>
+    </div>
+  </div>
+
+  <div class="ab">
+    <div class="card">
+      <h2>原始录音（只读）</h2>
+      <canvas id="spec-orig" height="180"></canvas>
+      <audio id="audio-orig" controls preload="auto"></audio>
+    </div>
+    <div class="card">
+      <h2>当前修复渲染（按需从原件重算）</h2>
+      <canvas id="spec-rend" height="180"></canvas>
+      <audio id="audio-rend" controls preload="auto"></audio>
+      <div class="row" style="margin-top:8px">
+        <button class="primary" id="btn-render">刷新修复渲染</button>
+        <span class="muted">统一降音量不会用作降噪手段；仅做短窗插补与窄带陷波。</span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

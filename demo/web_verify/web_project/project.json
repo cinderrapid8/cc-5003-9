@@ -1,0 +1,224 @@
+{
+  "format_version": 1,
+  "source_path": "/workspace/demo/web_verify/fixtures/pops_and_hum.wav",
+  "source_sha256": "505e2ec519d41758673149afbece0b677790c827a8443aa467bcc78ddb3fe607",
+  "original_dtype": "PCM_16",
+  "sample_rate": 16000,
+  "n_samples": 96000,
+  "next_op_id": 8,
+  "click_candidates": [
+    {
+      "cand_id": "click-0001",
+      "kind": "click",
+      "start": 9588,
+      "end": 9627,
+      "width": 39,
+      "peak_sample": 9601,
+      "peak_amplitude": 0.30230712890625,
+      "score": 78.793,
+      "detector": "ar_residual",
+      "detector_params": {
+        "method": "ar",
+        "threshold_sigma": 8,
+        "ar_order": 16,
+        "merge_gap_ms": 1.0,
+        "max_gap_ms": 10.0,
+        "window_pad_ms": 0.75
+      },
+      "repairable": true,
+      "reject_reason": null,
+      "decision": "accepted"
+    },
+    {
+      "cand_id": "click-0002",
+      "kind": "click",
+      "start": 23984,
+      "end": 24028,
+      "width": 44,
+      "peak_sample": 24001,
+      "peak_amplitude": 0.533782958984375,
+      "score": 100.66,
+      "detector": "ar_residual",
+      "detector_params": {
+        "method": "ar",
+        "threshold_sigma": 8,
+        "ar_order": 16,
+        "merge_gap_ms": 1.0,
+        "max_gap_ms": 10.0,
+        "window_pad_ms": 0.75
+      },
+      "repairable": true,
+      "reject_reason": null,
+      "decision": "accepted"
+    },
+    {
+      "cand_id": "click-0003",
+      "kind": "click",
+      "start": 43987,
+      "end": 44028,
+      "width": 41,
+      "peak_sample": 44001,
+      "peak_amplitude": 0.558380126953125,
+      "score": 63.52,
+      "detector": "ar_residual",
+      "detector_params": {
+        "method": "ar",
+        "threshold_sigma": 8,
+        "ar_order": 16,
+        "merge_gap_ms": 1.0,
+        "max_gap_ms": 10.0,
+        "window_pad_ms": 0.75
+      },
+      "repairable": true,
+      "reject_reason": null,
+      "decision": "accepted"
+    },
+    {
+      "cand_id": "click-0004",
+      "kind": "click",
+      "start": 57575,
+      "end": 57628,
+      "width": 53,
+      "peak_sample": 57601,
+      "peak_amplitude": 0.48223876953125,
+      "score": 111.693,
+      "detector": "ar_residual",
+      "detector_params": {
+        "method": "ar",
+        "threshold_sigma": 8,
+        "ar_order": 16,
+        "merge_gap_ms": 1.0,
+        "max_gap_ms": 10.0,
+        "window_pad_ms": 0.75
+      },
+      "repairable": true,
+      "reject_reason": null,
+      "decision": "accepted"
+    },
+    {
+      "cand_id": "click-0005",
+      "kind": "click",
+      "start": 81588,
+      "end": 81628,
+      "width": 40,
+      "peak_sample": 81601,
+      "peak_amplitude": 0.57470703125,
+      "score": 93.235,
+      "detector": "ar_residual",
+      "detector_params": {
+        "method": "ar",
+        "threshold_sigma": 8,
+        "ar_order": 16,
+        "merge_gap_ms": 1.0,
+        "max_gap_ms": 10.0,
+        "window_pad_ms": 0.75
+      },
+      "repairable": true,
+      "reject_reason": null,
+      "decision": "accepted"
+    },
+    {
+      "cand_id": "ov-a",
+      "kind": "click",
+      "start": 1000,
+      "end": 1040,
+      "width": 40,
+      "peak_sample": 1005,
+      "peak_amplitude": 0.5,
+      "score": 20.0,
+      "detector": "manual",
+      "detector_params": {},
+      "repairable": true,
+      "reject_reason": null,
+      "decision": "accepted"
+    },
+    {
+      "cand_id": "ov-b",
+      "kind": "click",
+      "start": 1020,
+      "end": 1060,
+      "width": 40,
+      "peak_sample": 1025,
+      "peak_amplitude": 0.5,
+      "score": 20.0,
+      "detector": "manual",
+      "detector_params": {},
+      "repairable": true,
+      "reject_reason": null,
+      "decision": "accepted"
+    }
+  ],
+  "hum_candidates": [],
+  "operations": [
+    {
+      "op_id": "op-0001",
+      "op": "click_repair",
+      "cand_id": "click-0001",
+      "algorithm": "ar",
+      "start": 9588,
+      "end": 9627,
+      "max_gap_ms": 10.0,
+      "params": {}
+    },
+    {
+      "op_id": "op-0002",
+      "op": "click_repair",
+      "cand_id": "click-0002",
+      "algorithm": "ar",
+      "start": 23984,
+      "end": 24028,
+      "max_gap_ms": 10.0,
+      "params": {}
+    },
+    {
+      "op_id": "op-0003",
+      "op": "click_repair",
+      "cand_id": "click-0003",
+      "algorithm": "ar",
+      "start": 43987,
+      "end": 44028,
+      "max_gap_ms": 10.0,
+      "params": {}
+    },
+    {
+      "op_id": "op-0004",
+      "op": "click_repair",
+      "cand_id": "click-0004",
+      "algorithm": "ar",
+      "start": 57575,
+      "end": 57628,
+      "max_gap_ms": 10.0,
+      "params": {}
+    },
+    {
+      "op_id": "op-0007",
+      "op": "click_repair",
+      "cand_id": "ov-b",
+      "algorithm": "ar",
+      "start": 1020,
+      "end": 1060,
+      "max_gap_ms": 10.0,
+      "params": {}
+    },
+    {
+      "op_id": "op-0005",
+      "op": "click_repair",
+      "cand_id": "click-0005",
+      "algorithm": "ar",
+      "start": 81588,
+      "end": 81628,
+      "max_gap_ms": 10.0,
+      "params": {}
+    },
+    {
+      "op_id": "op-0006",
+      "op": "click_repair",
+      "cand_id": "ov-a",
+      "algorithm": "ar",
+      "start": 1000,
+      "end": 1040,
+      "max_gap_ms": 10.0,
+      "params": {}
+    }
+  ]
+}

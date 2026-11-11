@@ -1,0 +1,123 @@
+{
+  "format_version": 1,
+  "source_path": "/workspace/demo/output/scenario_falsealarm_damaged.wav",
+  "source_sha256": "20e9731b5a800cb9c853a5119abcb8f084bc0028d88368641c560fc4124b41f8",
+  "original_dtype": "PCM_16",
+  "sample_rate": 16000,
+  "n_samples": 96000,
+  "next_op_id": 1,
+  "click_candidates": [
+    {
+      "cand_id": "click-0001",
+      "kind": "click",
+      "start": 14312,
+      "end": 14462,
+      "width": 150,
+      "peak_sample": 14333,
+      "peak_amplitude": 0.583892822265625,
+      "score": 84.396,
+      "detector": "ar_residual",
+      "detector_params": {
+        "method": "ar",
+        "threshold_sigma": 8.0,
+        "ar_order": 16,
+        "merge_gap_ms": 1.0,
+        "max_gap_ms": 10.0,
+        "window_pad_ms": 0.75
+      },
+      "repairable": true,
+      "reject_reason": "legitimate plosive/percussion transient: keep",
+      "decision": "excluded"
+    },
+    {
+      "cand_id": "click-0002",
+      "kind": "click",
+      "start": 14457,
+      "end": 14482,
+      "width": 25,
+      "peak_sample": 14469,
+      "peak_amplitude": -0.29443359375,
+      "score": 12.569,
+      "detector": "ar_residual",
+      "detector_params": {
+        "method": "ar",
+        "threshold_sigma": 8.0,
+        "ar_order": 16,
+        "merge_gap_ms": 1.0,
+        "max_gap_ms": 10.0,
+        "window_pad_ms": 0.75
+      },
+      "repairable": true,
+      "reject_reason": "legitimate plosive/percussion transient: keep",
+      "decision": "excluded"
+    },
+    {
+      "cand_id": "click-0003",
+      "kind": "click",
+      "start": 38310,
+      "end": 38459,
+      "width": 149,
+      "peak_sample": 38360,
+      "peak_amplitude": -0.60040283203125,
+      "score": 71.676,
+      "detector": "ar_residual",
+      "detector_params": {
+        "method": "ar",
+        "threshold_sigma": 8.0,
+        "ar_order": 16,
+        "merge_gap_ms": 1.0,
+        "max_gap_ms": 10.0,
+        "window_pad_ms": 0.75
+      },
+      "repairable": true,
+      "reject_reason": "legitimate plosive/percussion transient: keep",
+      "decision": "excluded"
+    },
+    {
+      "cand_id": "click-0004",
+      "kind": "click",
+      "start": 38451,
+      "end": 38476,
+      "width": 25,
+      "peak_sample": 38463,
+      "peak_amplitude": -0.013458251953125,
+      "score": 8.268,
+      "detector": "ar_residual",
+      "detector_params": {
+        "method": "ar",
+        "threshold_sigma": 8.0,
+        "ar_order": 16,
+        "merge_gap_ms": 1.0,
+        "max_gap_ms": 10.0,
+        "window_pad_ms": 0.75
+      },
+      "repairable": true,
+      "reject_reason": "legitimate plosive/percussion transient: keep",
+      "decision": "excluded"
+    },
+    {
+      "cand_id": "click-0005",
+      "kind": "click",
+      "start": 75127,
+      "end": 75265,
+      "width": 138,
+      "peak_sample": 75145,
+      "peak_amplitude": -0.704803466796875,
+      "score": 84.179,
+      "detector": "ar_residual",
+      "detector_params": {
+        "method": "ar",
+        "threshold_sigma": 8.0,
+        "ar_order": 16,
+        "merge_gap_ms": 1.0,
+        "max_gap_ms": 10.0,
+        "window_pad_ms": 0.75
+      },
+      "repairable": true,
+      "reject_reason": "legitimate plosive/percussion transient: keep",
+      "decision": "excluded"
+    }
+  ],
+  "hum_candidates": [],
+  "operations": []
+}

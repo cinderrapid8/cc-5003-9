@@ -1,0 +1,408 @@
+{
+  "fixtures": {
+    "clean": "/workspace/demo/output/fixtures/clean_baseline.wav",
+    "pops": "/workspace/demo/output/fixtures/pops_only.wav",
+    "hum": "/workspace/demo/output/fixtures/hum_only.wav",
+    "both": "/workspace/demo/output/fixtures/pops_and_hum.wav",
+    "long": "/workspace/demo/output/fixtures/long_defect.wav",
+    "legitimate_transients": "/workspace/demo/output/fixtures/legitimate_transients.wav"
+  },
+  "pops": {
+    "sample_rate": 16000,
+    "n_samples": 96000,
+    "detection": {
+      "click_candidates_total": 5,
+      "injected_pops": 5,
+      "true_positives": 5,
+      "misses": 0,
+      "false_alarms": 0,
+      "false_alarm_ids": [],
+      "false_alarm_details": [],
+      "unrepairable_candidates": []
+    },
+    "hum_detection": {
+      "candidates_total": 0,
+      "candidates": []
+    },
+    "preservation": {
+      "max_abs_diff_outside_repair_windows": 0.0,
+      "note": "click interpolation must be exactly zero here; hum notch legitimately alters the whole signal"
+    },
+    "signal_fidelity": {
+      "snr_rendered_vs_clean_db": 33.02,
+      "snr_damaged_vs_clean_db": 31.57
+    },
+    "repair_graph": {
+      "n_operations": 5,
+      "overlapping_pairs": [],
+      "operations": [
+        {
+          "order": 1,
+          "op_id": "op-0001",
+          "type": "click_repair",
+          "cand_id": "click-0001",
+          "algorithm": "ar",
+          "window_ms": [
+            599.25,
+            601.688
+          ],
+          "params": {}
+        },
+        {
+          "order": 2,
+          "op_id": "op-0002",
+          "type": "click_repair",
+          "cand_id": "click-0002",
+          "algorithm": "ar",
+          "window_ms": [
+            1499.0,
+            1501.75
+          ],
+          "params": {}
+        },
+        {
+          "order": 3,
+          "op_id": "op-0003",
+          "type": "click_repair",
+          "cand_id": "click-0003",
+          "algorithm": "ar",
+          "window_ms": [
+            2749.188,
+            2751.75
+          ],
+          "params": {}
+        },
+        {
+          "order": 4,
+          "op_id": "op-0004",
+          "type": "click_repair",
+          "cand_id": "click-0004",
+          "algorithm": "ar",
+          "window_ms": [
+            3598.438,
+            3601.75
+          ],
+          "params": {}
+        },
+        {
+          "order": 5,
+          "op_id": "op-0005",
+          "type": "click_repair",
+          "cand_id": "click-0005",
+          "algorithm": "ar",
+          "window_ms": [
+            5099.25,
+            5101.75
+          ],
+          "params": {}
+        }
+      ]
+    },
+    "scenario": "pops_only",
+    "expert_actions": {
+      "accepted": 5,
+      "excluded": 0
+    },
+    "rendered_wav": "/workspace/demo/output/project_pops/rendered.wav"
+  },
+  "hum": {
+    "sample_rate": 16000,
+    "n_samples": 96000,
+    "detection": {
+      "click_candidates_total": 0,
+      "injected_pops": 0,
+      "true_positives": 0,
+      "misses": 0,
+      "false_alarms": 0,
+      "false_alarm_ids": [],
+      "false_alarm_details": [],
+      "unrepairable_candidates": []
+    },
+    "hum_detection": {
+      "candidates_total": 4,
+      "candidates": [
+        {
+          "cand_id": "hum-0001",
+          "kind": "hum",
+          "frequency": 50.0,
+          "bandwidth": 2.0,
+          "peak_amplitude": 0.080053,
+          "snr_db": 63.9,
+          "decision": "accepted"
+        },
+        {
+          "cand_id": "hum-0002",
+          "kind": "hum",
+          "frequency": 100.0,
+          "bandwidth": 2.0,
+          "peak_amplitude": 0.039978,
+          "snr_db": 42.62,
+          "decision": "accepted"
+        },
+        {
+          "cand_id": "hum-0003",
+          "kind": "hum",
+          "frequency": 120.0,
+          "bandwidth": 2.0,
+          "peak_amplitude": 0.230328,
+          "snr_db": 30.27,
+          "decision": "excluded"
+        },
+        {
+          "cand_id": "hum-0004",
+          "kind": "hum",
+          "frequency": 150.0,
+          "bandwidth": 2.0,
+          "peak_amplitude": 0.019973,
+          "snr_db": 41.49,
+          "decision": "accepted"
+        }
+      ]
+    },
+    "preservation": {
+      "max_abs_diff_outside_repair_windows": 0.13714534044265747,
+      "note": "click interpolation must be exactly zero here; hum notch legitimately alters the whole signal"
+    },
+    "signal_fidelity": {
+      "snr_rendered_vs_clean_db": 34.73,
+      "snr_damaged_vs_clean_db": 11.98,
+      "snr_outside_notch_guards_db": 69.79,
+      "voice_band_change_db": -0.0
+    },
+    "repair_graph": {
+      "n_operations": 3,
+      "overlapping_pairs": [],
+      "operations": [
+        {
+          "order": 1,
+          "op_id": "op-0001",
+          "type": "hum_notch",
+          "cand_id": "hum-0001",
+          "algorithm": "iirnotch_filtfilt",
+          "window_ms": [
+            0.0,
+            6000.0
+          ],
+          "params": {
+            "frequency_hz": 50.0,
+            "bandwidth_hz": 2.0,
+            "quality_scale": 1.0
+          }
+        },
+        {
+          "order": 2,
+          "op_id": "op-0002",
+          "type": "hum_notch",
+          "cand_id": "hum-0002",
+          "algorithm": "iirnotch_filtfilt",
+          "window_ms": [
+            0.0,
+            6000.0
+          ],
+          "params": {
+            "frequency_hz": 100.0,
+            "bandwidth_hz": 2.0,
+            "quality_scale": 1.0
+          }
+        },
+        {
+          "order": 3,
+          "op_id": "op-0003",
+          "type": "hum_notch",
+          "cand_id": "hum-0004",
+          "algorithm": "iirnotch_filtfilt",
+          "window_ms": [
+            0.0,
+            6000.0
+          ],
+          "params": {
+            "frequency_hz": 150.0,
+            "bandwidth_hz": 2.0,
+            "quality_scale": 1.0
+          }
+        }
+      ]
+    },
+    "hum_residual": [
+      {
+        "frequency_hz": 50.0,
+        "injected_amplitude": 0.08,
+        "band_energy_clean": 37.797509,
+        "band_energy_damaged": 5534057.075336,
+        "band_energy_rendered": 14.339285,
+        "residual_vs_clean_db": -4.21,
+        "suppression_db": 55.87
+      },
+      {
+        "frequency_hz": 100.0,
+        "injected_amplitude": 0.04,
+        "band_energy_clean": 1019.358729,
+        "band_energy_damaged": 1390990.115462,
+        "band_energy_rendered": 442.021506,
+        "residual_vs_clean_db": -3.63,
+        "suppression_db": 34.98
+      },
+      {
+        "frequency_hz": 150.0,
+        "injected_amplitude": 0.02,
+        "band_energy_clean": 385.14006,
+        "band_energy_damaged": 345583.219565,
+        "band_energy_rendered": 119.269338,
+        "residual_vs_clean_db": -5.09,
+        "suppression_db": 34.62
+      }
+    ],
+    "scenario": "hum_only",
+    "expert_actions": {
+      "accepted": [
+        "hum-0001",
+        "hum-0002",
+        "hum-0004"
+      ],
+      "excluded": [
+        "hum-0003"
+      ],
+      "note": "120 Hz speech-harmonic candidate excluded; only true 50/100/150 Hz line components notched"
+    },
+    "rendered_wav": "/workspace/demo/output/project_hum/rendered.wav"
+  },
+  "long_defect": {
+    "sample_rate": 16000,
+    "n_samples": 96000,
+    "detection": {
+      "click_candidates_total": 1,
+      "injected_pops": 1,
+      "true_positives": 1,
+      "misses": 0,
+      "false_alarms": 0,
+      "false_alarm_ids": [],
+      "false_alarm_details": [],
+      "unrepairable_candidates": [
+        "click-0001"
+      ]
+    },
+    "hum_detection": {
+      "candidates_total": 0,
+      "candidates": []
+    },
+    "preservation": {
+      "max_abs_diff_outside_repair_windows": 0.0,
+      "note": "click interpolation must be exactly zero here; hum notch legitimately alters the whole signal"
+    },
+    "signal_fidelity": {
+      "snr_rendered_vs_clean_db": 8.96,
+      "snr_damaged_vs_clean_db": 8.96
+    },
+    "repair_graph": {
+      "n_operations": 0,
+      "overlapping_pairs": [],
+      "operations": []
+    },
+    "scenario": "long_defect_refused",
+    "expert_actions": {
+      "accepted": 0,
+      "excluded": 1
+    },
+    "rendered_wav": null
+  },
+  "false_alarm": {
+    "sample_rate": 16000,
+    "n_samples": 96000,
+    "detection": {
+      "click_candidates_total": 5,
+      "injected_pops": 0,
+      "true_positives": 0,
+      "misses": 0,
+      "false_alarms": 5,
+      "false_alarm_ids": [
+        "click-0001",
+        "click-0002",
+        "click-0003",
+        "click-0004",
+        "click-0005"
+      ],
+      "false_alarm_details": [
+        {
+          "cand_id": "click-0001",
+          "at_ms": 895.81,
+          "score_sigma": 84.4,
+          "repairable": true
+        },
+        {
+          "cand_id": "click-0002",
+          "at_ms": 904.31,
+          "score_sigma": 12.57,
+          "repairable": true
+        },
+        {
+          "cand_id": "click-0003",
+          "at_ms": 2397.5,
+          "score_sigma": 71.68,
+          "repairable": true
+        },
+        {
+          "cand_id": "click-0004",
+          "at_ms": 2403.94,
+          "score_sigma": 8.27,
+          "repairable": true
+        },
+        {
+          "cand_id": "click-0005",
+          "at_ms": 4696.56,
+          "score_sigma": 84.18,
+          "repairable": true
+        }
+      ],
+      "unrepairable_candidates": []
+    },
+    "hum_detection": {
+      "candidates_total": 0,
+      "candidates": []
+    },
+    "preservation": {
+      "max_abs_diff_outside_repair_windows": 0.0,
+      "note": "click interpolation must be exactly zero here; hum notch legitimately alters the whole signal"
+    },
+    "signal_fidelity": {
+      "snr_rendered_vs_clean_db": 25.06,
+      "snr_damaged_vs_clean_db": 25.06
+    },
+    "repair_graph": {
+      "n_operations": 0,
+      "overlapping_pairs": [],
+      "operations": []
+    },
+    "scenario": "false_alarm_excluded",
+    "expert_actions": {
+      "accepted": 0,
+      "excluded": 5,
+      "excluded_ids": [
+        "click-0001",
+        "click-0002",
+        "click-0003",
+        "click-0004",
+        "click-0005"
+      ]
+    },
+    "render_identical_to_input": true,
+    "rendered_wav": "/workspace/demo/output/project_falsealarm/rendered.wav"
+  },
+  "reproducibility": {
+    "reopened_project": "/workspace/demo/output/project_pops",
+    "first_render_sha256": "5d6a8445561048980cd68bbe653d729f2ca52dd06e85b8ce467a55519737fd2d",
+    "reopened_render_sha256": "5d6a8445561048980cd68bbe653d729f2ca52dd06e85b8ce467a55519737fd2d",
+    "wav_bytes_identical": true,
+    "max_pcm16_code_gap": 1,
+    "codes_within_one_lsb": true,
+    "operations_replayed": 5,
+    "deterministic": true
+  },
+  "config": {
+    "sample_rate": 16000,
+    "max_gap_ms": 10.0,
+    "click_threshold_sigma": 8.0,
+    "click_detector": "ar_residual",
+    "hum_bandwidth_hz": 2.0,
+    "note": "uniform gain reduction is never used; every operation is local interpolation or a narrow recorded notch"
+  }
+}
