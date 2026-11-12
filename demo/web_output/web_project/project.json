@@ -1,11 +1,11 @@
 {
   "format_version": 1,
-  "source_path": "/workspace/demo/web_output/fixtures/pops_and_hum.wav",
+  "source_path": "/Users/kkcarrot/solo-project/5003/5003-01Gen-9/workspace/demo/web_output/fixtures/pops_and_hum.wav",
   "source_sha256": "505e2ec519d41758673149afbece0b677790c827a8443aa467bcc78ddb3fe607",
   "original_dtype": "PCM_16",
   "sample_rate": 16000,
   "n_samples": 96000,
-  "next_op_id": 1,
+  "next_op_id": 2,
   "click_candidates": [
     {
       "cand_id": "click-0001",
@@ -49,7 +49,7 @@
       },
       "repairable": true,
       "reject_reason": null,
-      "decision": "pending"
+      "decision": "accepted"
     },
     {
       "cand_id": "click-0003",
@@ -156,5 +156,16 @@
       "decision": "pending"
     }
   ],
-  "operations": []
+  "operations": [
+    {
+      "op_id": "op-0001",
+      "op": "click_repair",
+      "cand_id": "click-0002",
+      "algorithm": "ar",
+      "start": 23984,
+      "end": 24028,
+      "max_gap_ms": 10,
+      "params": {}
+    }
+  ]
 }
