@@ -25,8 +25,13 @@ import numpy as np
 
 from .audioio import sha256_file
 from .project import Project
+from .diagnostics import (
+    DiagnosticBudget,
+    DiagnosticCollector,
+    diagnostic_replay,
+)
+from .controlled import run_controlled_diagnosis
 from .synthetic import (
-    InjectedHum,
     add_legitimate_transients,
     build_fixture_bundle,
     evaluate,
@@ -316,6 +321,101 @@ def _demo_reproducibility(out_dir: str) -> dict:
     }
 
 
+# ---------------------------------------------------------------------------
+# Collateral-damage diagnostics
+# ---------------------------------------------------------------------------
+
+
+def _json_dump(path: str, payload: dict) -> None:
+    def default(o):
+        if isinstance(o, np.bool_):
+            return bool(o)
+        if isinstance(o, np.integer):
+            return int(o)
+        if isinstance(o, np.floating):
+            return float(o)
+        if isinstance(o, np.ndarray):
+            return o.tolist()
+        raise TypeError(f"not JSON serializable: {type(o)!r}")
+
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2, ensure_ascii=False, default=default)
+
+
+def cmd_diagnose(args: argparse.Namespace) -> None:
+    """Run switchable, bounded diagnostics without changing the audio path."""
+    if not args.enabled:
+        # Diagnostics off: prove the switch is inert and write no evidence.
+        proj = Project.open(args.project)
+        out = proj.export_render(
+            args.output or os.path.join(proj.path, "rendered.wav"))
+        print("diagnostics disabled; no evidence collected")
+        print(f"rendered {out} (identical to a normal render)")
+        return
+
+    budget = DiagnosticBudget(
+        max_segments=args.max_segments,
+        max_evidence=args.max_evidence,
+        max_window_ms=args.max_window_ms,
+    )
+    if args.controlled:
+        report = run_controlled_diagnosis(
+            args.project, sample_rate=args.sample_rate, budget=budget,
+            wide_threshold_sigma=args.wide_sigma,
+            narrow_threshold_sigma=args.narrow_sigma,
+            mismatched_bandwidth_hz=args.wide_bandwidth)
+        out_dir = os.path.abspath(args.project)
+        # The controlled render must still equal the project's own render.
+        report_path = os.path.join(out_dir,
+                                   args.report or "diagnostic_report.json")
+        _json_dump(report_path, report)
+        print(f"controlled diagnosis report: {report_path}")
+        print(json.dumps({
+            h: v["verdict"] for h, v in report["hypotheses"].items()},
+            indent=2))
+        return
+
+    proj = Project.open(args.project)
+    collector = DiagnosticCollector(
+        sample_rate=proj.audio.sample_rate,
+        source_sha256=proj.audio.source_sha256, budget=budget)
+    rendered, _stages = diagnostic_replay(
+        proj, collector,
+        detect_kwargs_click={"threshold_sigma": args.narrow_sigma},
+        detect_kwargs_hum={"line_frequencies": (50.0, 60.0),
+                           "snr_threshold_db": 12.0,
+                           "bandwidth_hz": args.notch_bandwidth})
+    # Hard invariant: the diagnostic replay renders the same samples as the
+    # ordinary render.  Any divergence is a tool defect, not a finding.
+    ordinary = proj.render()
+    same = bool(np.array_equal(rendered, ordinary))
+    if not same:
+        raise RuntimeError(
+            "diagnostic replay diverged from Project.render; diagnostics "
+            "must never alter the audio path")
+    out = proj.export_render(
+        args.output or os.path.join(proj.path, "diagnostic_render.wav"))
+    report = collector.to_report()
+    report["render_path"] = os.path.abspath(out)
+    report["render_matches_project_render"] = same
+    report_path = os.path.abspath(
+        args.report or os.path.join(proj.path, "diagnostic_report.json"))
+    _json_dump(report_path, report)
+    print(f"diagnostic report: {report_path}")
+    print(f"render: {out}")
+    print(f"render identical to normal render: {same}")
+    print(f"segments recorded: {report['sampling']['segments_recorded']} "
+          f"(budget {args.max_segments}); evidence records: "
+          f"{report['sampling']['evidence_records']} "
+          f"(budget {args.max_evidence})")
+    for rec in report["evidence"]:
+        stage = rec.get("stage")
+        if stage in ("click_detection", "hum_detection", "click_repair",
+                     "hum_notch"):
+            print(f"  stage={stage} hypothesis={rec.get('hypothesis', '-')} "
+                  f"cand={rec.get('cand_id', '-')}")
+
+
 def cmd_demo(args: argparse.Namespace) -> None:
     out_dir = os.path.abspath(args.out)
     os.makedirs(out_dir, exist_ok=True)
@@ -411,6 +511,36 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--sample-rate", type=int, default=16000)
     sp.add_argument("--max-gap-ms", type=float, default=10.0)
     sp.set_defaults(func=cmd_demo)
+
+    sp = sub.add_parser(
+        "diagnose",
+        help="bounded collateral-damage diagnostics; audio path unchanged")
+    sp.add_argument("project",
+                    help="project dir (or output dir when --controlled)")
+    sp.add_argument("--enabled", dest="enabled", action="store_true",
+                    default=True,
+                    help="collect evidence (default)")
+    sp.add_argument("--disabled", dest="enabled", action="store_false",
+                    help="switch diagnostics off; render only, no evidence")
+    sp.add_argument("--controlled", action="store_true",
+                    help="build the annotated controlled recording and run "
+                         "all three hypothesis probes")
+    sp.add_argument("--report", default=None,
+                    help="diagnostic report path (project dir by default)")
+    sp.add_argument("--output", default=None,
+                    help="rendered WAV path (project dir by default)")
+    sp.add_argument("--sample-rate", type=int, default=16000)
+    sp.add_argument("--max-segments", type=int, default=128)
+    sp.add_argument("--max-evidence", type=int, default=512)
+    sp.add_argument("--max-window-ms", type=float, default=40.0)
+    sp.add_argument("--narrow-sigma", type=float, default=8.0,
+                    help="threshold for the conservative detection pass")
+    sp.add_argument("--wide-sigma", type=float, default=7.5,
+                    help="threshold for the permissive H1 probe")
+    sp.add_argument("--wide-bandwidth", type=float, default=12.0,
+                    help="notch bandwidth for the mismatched H3 probe (Hz)")
+    sp.add_argument("--notch-bandwidth", type=float, default=2.0)
+    sp.set_defaults(func=cmd_diagnose)
     return p
 
 

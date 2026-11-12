@@ -374,6 +374,185 @@ def evaluate(project: Project, clean: np.ndarray,
     return report
 
 
+# ---------------------------------------------------------------------------
+# Controlled diagnostic recording: annotated clear onsets + stable harmonics
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class ControlledRecording:
+    """A controlled clip whose ground-truth segments are fully annotated.
+
+    vowel_segments mark sustained voiced regions (stable f0, slow attack);
+    onset_segments mark clear consonant-like attacks (broadband, sharp).
+    The annotations let the diagnostics validate themselves against known
+    content rather than inferring a root cause from a symptom.
+    """
+
+    samples: np.ndarray
+    sample_rate: int
+    vowel_segments: list[dict[str, Any]]
+    onset_segments: list[dict[str, Any]]
+    pop_sites: list[dict[str, Any]]
+    hum_components: list[dict[str, Any]]
+
+    def annotations(self) -> dict[str, Any]:
+        return {
+            "sample_rate": self.sample_rate,
+            "n_samples": len(self.samples),
+            "vowel_segments": self.vowel_segments,
+            "onset_segments": self.onset_segments,
+            "pop_sites": self.pop_sites,
+            "hum_components": self.hum_components,
+        }
+
+
+def build_controlled_recording(
+    sample_rate: int = 16000,
+    duration: float = 6.0,
+    *,
+    f0: float = 110.0,
+    seed: int = 20261112,
+) -> ControlledRecording:
+    """Build the controlled clip used to separate the three damage hypotheses.
+
+    The content is deliberately constrained so every detector response has a
+    known interpretation:
+
+      * three voiced phrases share one stable f0 (110 Hz, off the 50/60 Hz
+        mains grid and its harmonics), giving clean sustained harmonics that
+        a single global AR predictor can model without systematic residuals;
+      * every phrase starts with a sharp, annotated attack envelope;
+      * three broadband consonant-like bursts sit in the pauses between
+        phrases, physically similar to defect pops but known to be real.
+    """
+    rng = np.random.default_rng(seed)
+    n = int(duration * sample_rate)
+    t = np.arange(n) / sample_rate
+    out = np.zeros(n, dtype=np.float32)
+
+    # One continuous voiced carrier: the phrases are amplitude regions of the
+    # same stable harmonic stack, never hard-gated silence, so a global AR
+    # predictor keeps valid residuals across the whole clip.
+    phase = 2 * np.pi * f0 * t
+    glottis = (np.sin(phase) + 0.35 * np.sin(2 * phase)
+               + 0.12 * np.sin(3 * phase))
+    formants = np.zeros_like(t)
+    for fc, gain in ((720, 1.0), (1240, 0.55), (2800, 0.25)):
+        formants += gain * np.sin(2 * np.pi * fc * t)
+    carrier = glottis * (0.55 + 0.45 * formants
+                         / (np.max(np.abs(formants)) + 1e-9))
+    carrier += 0.003 * rng.standard_normal(n)
+
+    # (start_ms, end_ms) for the strong voiced phrases; the gaps between them
+    # stay voiced at a breath-like 35% level rather than dropping to zero.
+    phrase_specs = [(400.0, 1700.0), (2200.0, 3500.0), (4000.0, 5300.0)]
+    envelope = np.full(n, 0.35, dtype=np.float64)
+    vowel_segments: list[dict[str, Any]] = []
+    onset_segments: list[dict[str, Any]] = []
+    for s_ms, e_ms in phrase_specs:
+        s, e = int(s_ms / 1000 * sample_rate), int(e_ms / 1000 * sample_rate)
+        envelope[s:e] = 1.0
+        vowel_segments.append({
+            "kind": "sustained_vowel",
+            "f0_hz": f0,
+            "start": s, "end": e,
+            "start_ms": s_ms, "end_ms": e_ms,
+        })
+    # Smooth the phrase edges (~20 ms moving average) into real attacks
+    # instead of rectangular gates; annotate the resulting attack region.
+    kernel = max(1, int(0.020 * sample_rate))
+    envelope = np.convolve(envelope, np.ones(kernel) / kernel, mode="same")
+    out = carrier * envelope
+    for s_ms, e_ms in phrase_specs:
+        s = int(s_ms / 1000 * sample_rate)
+        on_end = s + int(0.030 * sample_rate)
+        onset_segments.append({
+            "kind": "vowel_onset",
+            "f0_hz": f0,
+            "start": s, "end": on_end,
+            "start_ms": s_ms,
+            "end_ms": round(1000.0 * on_end / sample_rate, 3),
+        })
+
+    # Independent consonant-like noise bursts in the breath-level inter-phrase
+    # regions.  Amplitude stays low enough that the global AR fit used by the
+    # click detector is not destabilised (which would manufacture vowel
+    # residuals), while each burst still crosses the candidate threshold.
+    consonant_specs = [(1900.0, 8), (3700.0, 10), (5500.0, 7)]
+    for c_ms, length_ms in consonant_specs:
+        c = int(c_ms / 1000 * sample_rate)
+        length = int(sample_rate * length_ms / 1000.0)
+        lo, hi = max(0, c - length // 2), min(n, c + length // 2)
+        tt = np.arange(hi - lo)
+        burst_env = np.exp(-tt / (length * 0.35))
+        burst = 0.15 * burst_env * rng.standard_normal(hi - lo)
+        out[lo:hi] += burst.astype(np.float32)
+        onset_segments.append({
+            "kind": "consonant_burst",
+            "start": lo, "end": hi,
+            "start_ms": round(1000.0 * lo / sample_rate, 3),
+            "end_ms": round(1000.0 * hi / sample_rate, 3),
+        })
+
+    out = (out / (np.max(np.abs(out)) + 1e-9) * 0.85).astype(np.float32)
+    return ControlledRecording(
+        samples=out, sample_rate=sample_rate,
+        vowel_segments=vowel_segments,
+        onset_segments=onset_segments,
+        pop_sites=[], hum_components=[])
+
+
+def inject_controlled_pops(
+    recording: ControlledRecording,
+    *,
+    pop_centres_ms: list[float] | None = None,
+    widths_ms: list[float] | None = None,
+    amplitudes: list[float] | None = None,
+) -> tuple[np.ndarray, list[dict[str, Any]]]:
+    """Add pops at known, annotated sites to the controlled recording.
+
+    One pop lands inside a sustained vowel and one on a clear onset, so the
+    same defect physics is observed against both content types.
+    """
+    if pop_centres_ms is None:
+        pop_centres_ms = [900.0, 2210.0, 4650.0]
+        widths_ms = [1.5, 2.0, 1.0]
+        amplitudes = [0.7, 0.8, 0.6]
+    damaged, meta = inject_pops(
+        recording.samples, recording.sample_rate,
+        centres_ms=pop_centres_ms, widths_ms=widths_ms,
+        amplitudes=amplitudes)
+    sites = [
+        {"centre_ms": c, "width_ms": w, "amplitude": a}
+        for c, w, a in zip(meta.centres_ms, meta.widths_ms,
+                           meta.amplitudes)]
+    recording.pop_sites = sites
+    return damaged, sites
+
+
+def inject_controlled_hum(
+    samples: np.ndarray,
+    recording: ControlledRecording,
+    *,
+    fundamental_hz: float = 50.0,
+    harmonics: list[int] | None = None,
+    amplitudes: list[float] | None = None,
+) -> tuple[np.ndarray, list[dict[str, Any]]]:
+    """Add a known mains component set and annotate each line's band."""
+    damaged, hum = inject_hum(
+        samples, recording.sample_rate, fundamental_hz=fundamental_hz,
+        harmonics=harmonics, amplitudes=amplitudes)
+    components = [
+        {"frequency_hz": hum.fundamental_hz * h,
+         "harmonic": h, "amplitude": a,
+         "band_hz": [hum.fundamental_hz * h - 1.0,
+                     hum.fundamental_hz * h + 1.0]}
+        for h, a in zip(hum.harmonics, hum.amplitudes)]
+    recording.hum_components = components
+    return damaged, components
+
+
 def write_report(report: dict[str, Any], out_dir: str) -> str:
     path = os.path.join(out_dir, "evaluation_report.json")
 
